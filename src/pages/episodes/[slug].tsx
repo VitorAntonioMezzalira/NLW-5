@@ -2,6 +2,7 @@ import { format, parseISO } from 'date-fns';
 import ptBR from 'date-fns/locale/pt-BR';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Image from 'next/image';
+import { useRouter } from 'next/router'
 import { api } from '../../services/api';
 import { convertDurationToTimeString } from '../../utils/convertDurationToTimeString';
 import Link from 'next/link';
@@ -14,12 +15,10 @@ type Episode = {
   publishedAt: string,
   thumbnail: string,
   description: string,
-  file: {
-    url: string,
-    type: string,
-    duration: number,
-    durationAsString: string
-  }
+  url: string,
+  type: string,
+  duration: number,
+  durationAsString: string
 }
 
 type EpisodeProps = {
@@ -27,6 +26,13 @@ type EpisodeProps = {
 }
 
 export default function Episode({ episode }: EpisodeProps) {
+
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <p>Carregando...</p>
+  }
+
   return (
     <div className={styles.episode}>
       <div className={styles.thumbnailContainer}>
@@ -51,7 +57,7 @@ export default function Episode({ episode }: EpisodeProps) {
         <h1>{episode.title}</h1>
         <span>{episode.members}</span>
         <span>{episode.publishedAt}</span>
-        <span>{episode.file.durationAsString}</span>
+        <span>{episode.durationAsString}</span>
       </header>
       <div
         className={styles.description}
@@ -62,9 +68,26 @@ export default function Episode({ episode }: EpisodeProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
+
+  const { data } = await api.get('episodes', {
+    params: {
+      _limit: 2,
+      _sort: 'published_at',
+      _order: 'desc'
+    }
+  })
+
+  const paths = data.map(episode => {
+    return {
+      params: {
+        slug: episode.id
+      }
+    }
+  })
+
   return {
-    paths: [],
-    fallback: 'blocking'
+    paths: paths,
+    fallback: true
   }
 }
 
@@ -81,12 +104,10 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
     publishedAt: format(parseISO(data.published_at), 'd MMM yy', { locale: ptBR }),
     thumbnail: data.thumbnail,
     description: data.description,
-    file: {
-      url: data.file.url,
-      type: data.file.type,
-      duration: Number(data.file.duration),
-      durationAsString: convertDurationToTimeString(Number(data.file.duration))
-    }
+    url: data.file.url,
+    type: data.file.type,
+    duration: Number(data.file.duration),
+    durationAsString: convertDurationToTimeString(Number(data.file. duration))
   }
 
   return {

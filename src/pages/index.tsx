@@ -7,6 +7,8 @@ import ptBR from 'date-fns/locale/pt-BR'
 import { convertDurationToTimeString } from '../utils/convertDurationToTimeString';
 
 import styles from './home.module.scss';
+import { useContext } from 'react';
+import { PlayerContext } from '../contexts/PlayersContext';
 
 type Episode = {
   id: string,
@@ -15,12 +17,9 @@ type Episode = {
   publishedAt: string,
   thumbnail: string,
   description: string,
-  file: {
-    url: string,
-    type: string,
-    duration: number,
-    durationAsString: string
-  }
+  url: string,
+  duration: number,
+  durationAsString: string
 }
 
 type HomeProps = {
@@ -29,6 +28,8 @@ type HomeProps = {
 }
 
 export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
+
+  const { play } = useContext(PlayerContext)
 
   return (
     <div className={styles.homepage}>
@@ -53,10 +54,10 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
                     <Link href={`/episodes/${episode.id}`}>{episode.title}</Link>
                     <p>{episode.members}</p>
                     <span>{episode.publishedAt}</span>
-                    <span>{episode.file.durationAsString}</span>
+                    <span>{episode.durationAsString}</span>
                   </div>
 
-                  <button type="button">
+                  <button type="button" onClick={() => play(episode)}>
                     <img src="/play-green.svg" alt="Tocar episódio" />
                   </button>
 
@@ -99,7 +100,7 @@ export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
                     </td>
                     <td>{episode.members}</td>
                     <td style={{ width: 100 }}>{episode.publishedAt}</td>
-                    <td>{episode.file.durationAsString}</td>
+                    <td>{episode.durationAsString}</td>
                     <td>
                       <button>
                         <img src="/play-green.svg" alt="Tocar episódio" />
@@ -134,12 +135,10 @@ export const getStaticProps: GetStaticProps = async () => {
       members: episode.members,
       publishedAt: format(parseISO(episode.published_at), 'd MMM yy', { locale: ptBR }),
       thumbnail: episode.thumbnail,
-      file: {
-        url: episode.file.url,
-        type: episode.file.type,
-        duration: Number(episode.file.duration),
-        durationAsString: convertDurationToTimeString(Number(episode.file.duration))
-      }
+      url: episode.file.url,
+      type: episode.file.type,
+      duration: Number(episode.file.duration),
+      durationAsString: convertDurationToTimeString(Number(episode.file.duration))
     }
   })
 
