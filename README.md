@@ -1,2 +1,2 @@
-run frontend yarn dev
-run fake backend yarn server
+run frontend yarn dev;
+run fake backend yarn server;
